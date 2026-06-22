@@ -2,14 +2,20 @@ package bamreader
 
 import (
 	"fmt"
-	"log"
+
+	"cigarmender/reference"
 
 	"github.com/biogo/hts/sam"
 )
 
+func NewDeletionCentrer(index reference.HPIndex) DelCenterer {
+	return DelCenterer{hpindex: index}
+}
+
 type DelCenterer struct {
 	DelCount int
 	HPCount  int
+	hpindex  reference.HPIndex
 }
 
 func (d *DelCenterer) Summary() string {
@@ -26,12 +32,17 @@ func (d *DelCenterer) Visit(read *sam.Record, s string) error {
 	for _, cigarop := range read.Cigar {
 		if cigarop.Type() == sam.CigarDeletion { // deletion doesn't advance query
 			// check if hp
+			query := reference.NewRange(rpos, rpos+cigarop.Len())
+			hp, found := d.hpindex.Search(read.Ref.Name(), query)
+			if found {
+				println("Found homopolymer for read : %s", hp.ToString())
+			}
 
 		} else {
-			qpos += cigarop.Type().Consumes().Reference
-			rpos += cigarop.Type().Consumes().Query
+			rpos += cigarop.Type().Consumes().Reference
+			qpos += cigarop.Type().Consumes().Query
 		}
 	}
-	log.Fatalf("Implement me - delcentre.go")
+	// log.Fatalf("Implement me - delcentre.go")
 	return nil
 }

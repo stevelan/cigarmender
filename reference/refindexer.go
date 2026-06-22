@@ -3,6 +3,7 @@ package reference
 import (
 	"fmt"
 	"log"
+	"maps"
 	"os"
 	"slices"
 	"sort"
@@ -13,14 +14,13 @@ import (
 	"github.com/biogo/biogo/seq/linear"
 )
 
-/**
-* Range - a genomic range with a start and end position
- */
+// Range - a genomic range with a start and end position
 type Range struct {
 	start int
 	end   int
 }
 
+// NewRange creates a new range with the largest value guaranteed to be after the smallest
 func NewRange(s, e int) Range {
 	if e <= s {
 		return Range{start: e, end: s}
@@ -28,10 +28,12 @@ func NewRange(s, e int) Range {
 	return Range{start: s, end: e}
 }
 
-func (r *Range) IsWithin(loc int) bool {
-	return r.start <= loc && loc < r.end
+// IsWithin returns true if the target range is within the receiver range
+func (r *Range) IsWithin(target Range) bool {
+	return r.start <= target.start && target.end < r.end
 }
 
+// ToString receiver function for Range
 func (r *Range) ToString() string {
 	return fmt.Sprintf("Range{%d to %d}", r.start, r.end)
 }
@@ -45,13 +47,59 @@ func sortRanges(ranges []Range) {
 	})
 }
 
+// HPIndex is an index of all the homopolymers in the reference fasta keyed by fasta ID
 type HPIndex struct {
 	index map[string][]Range
 }
 
-/**
-* IndexHomopolymers - Scan through the reference genome and collect homopolymers in an index.
- */
+// NewHPIndex creates a new homopolymer index which is just sorted lists of ranges suitable for binary search
+func NewHPIndex(index map[string][]Range) *HPIndex {
+	// sort indexes
+	for _, ranges := range index {
+		sortRanges(ranges)
+	}
+
+	return &HPIndex{index: index}
+}
+
+// Summary of the index
+func (hp *HPIndex) Summary() string {
+	total := 0
+	max := 0
+	for _, v := range hp.index {
+		length := len(v)
+		total += length
+		if length > max {
+			max = length
+		}
+	}
+	return fmt.Sprintf("Homopolymer Index with %d regions and %d, %d total and max homopolymers", len(hp.index), total, max)
+}
+
+// Search performs a search within the indexed ID for homopolymers that encompass the query Range.
+// return the range of the homopolymer, found
+func (hp *HPIndex) Search(id string, query Range) (Range, bool) {
+	if hp.index[id] == nil {
+		log.Fatalf("Unknown ID in index, was the alignment done with the same reference as the index : %s - %s", id,
+			slices.Collect(maps.Keys(hp.index)))
+	}
+	idx, found := slices.BinarySearchFunc(hp.index[id], query, func(e Range, t Range) int {
+		if e.IsWithin(t) {
+			return 0
+		}
+		if e.start < t.start {
+			return -1
+		}
+
+		return 1
+	})
+	if found {
+		return hp.index[id][idx], true
+	}
+	return Range{}, false
+}
+
+// IndexHomopolymers - Scan through the reference genome and collect homopolymers in an index.
 func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (*HPIndex, error) {
 	reference, err := os.Open(refFastaPath)
 	if err != nil {
@@ -72,7 +120,7 @@ func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (*HPI
 
 	for scanner.Next() {
 		sequence := scanner.Seq().(*linear.Seq)
-
+		log.Printf("Indexing %s from %s", sequence.Name(), refFastaPath)
 		index[sequence.ID] = make([]Range, 0)
 
 		var lastBase alphabet.Letter = 0
@@ -113,26 +161,5 @@ func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (*HPI
 		return nil, fmt.Errorf("Error scanning reference %v", err)
 	}
 
-	// sort index
-	for _, ranges := range index {
-		sortRanges(ranges)
-	}
-
-	return &HPIndex{index: index}, nil
-}
-
-func (hpIndex *HPIndex) Search(id string, query Range) (int, bool) {
-	if hpIndex.index[id] == nil {
-		log.Fatalf("Unknown ID in index, was the alignment done with the same reference as the index : %s", id)
-	}
-	return slices.BinarySearchFunc(hpIndex.index[id], query, func(e Range, t Range) int {
-		if e.IsWithin(t.start) {
-			return 0
-		}
-		if e.start < t.start {
-			return -1
-		}
-
-		return 1
-	})
+	return NewHPIndex(index), nil
 }

@@ -6,7 +6,7 @@ import (
 )
 
 const ID = "Pf3D7_01_v3"
-const ID_2 = "Pf3D7_02_v3"
+const ID2 = "Pf3D7_02_v3"
 
 func TestIndexHomopolymers(t *testing.T) {
 	index := index(3, []string{"A", "C", "G", "T"}, t)
@@ -42,8 +42,8 @@ func TestIndexFewerBases(t *testing.T) {
 func TestChrTwo(t *testing.T) {
 	index := index(3, []string{"A", "C", "G", "T"}, t)
 
-	if len(index[ID_2]) != 4 {
-		t.Fatalf("Expected 4 hps on chrome 2 : %d", len(index[ID_2]))
+	if len(index[ID2]) != 4 {
+		t.Fatalf("Expected 4 hps on chrome 2 : %d", len(index[ID2]))
 	}
 
 }
@@ -64,12 +64,12 @@ func TestSearch(t *testing.T) {
 	}
 
 	query := NewRange(149, 152)
-	idx, found := index.Search(ID, query)
+	result, found := index.Search(ID, query)
 	if !found {
 		t.Fatalf("Could not find %s in %v", query.ToString(), index)
 	}
-	if idx != 1 {
-		t.Fatalf("Should have found %s at 0 instead got %d - %v", query.ToString(), idx, index)
+	if result.start != 149 {
+		t.Fatalf("Should have found %s at 0 instead got %d - %v", query.ToString(), result.start, index)
 	}
 
 }

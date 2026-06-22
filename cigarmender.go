@@ -3,16 +3,16 @@ package main
 import (
 	"cigarmender/args"
 	"cigarmender/bamreader"
+	"cigarmender/reference"
+	"fmt"
 	"log"
 
 	"time"
-
-	"github.com/biogo/hts/sam"
 )
 
 func timeTrack(start time.Time, name string) {
 	elapsed := time.Since(start)
-	log.Printf("%s took %s", name, elapsed)
+	log.Printf("%s completed, took %s", name, elapsed)
 }
 
 func main() {
@@ -21,8 +21,10 @@ func main() {
 	args := args.ParseArgs()
 
 	log.Printf("Processing cigarmender with %s", args.ToString())
+	index := buildIndex(args)
+	fmt.Println(index.Summary())
 
-	delCounter := getVisitor(args)
+	delCounter := getVisitor(args, index)
 	count, err := bamreader.ReadBam(args.Input, delCounter, args)
 	if err != nil {
 		log.Fatalf("Error reading bam %v", err)
@@ -32,16 +34,20 @@ func main() {
 	log.Println(delCounter.Summary())
 }
 
-func getVisitor(args args.Args) bamreader.ReadVisitor {
+func buildIndex(args args.Args) reference.HPIndex {
+	defer timeTrack(time.Now(), "Building index")
+	hpindex, err := reference.IndexHomopolymers(args.Reference, 3, args.Bases)
+	if err != nil {
+		log.Fatalf("Could not build index for reference %s - %v", args.Reference, err)
+	}
+	return *hpindex
+}
+
+func getVisitor(args args.Args, index reference.HPIndex) bamreader.ReadVisitor {
 	if args.DryRun {
-		return &bamreader.DelCounter{}
+		return bamreader.NewDelCounter(index)
 	}
 
 	log.Fatalf("Implement me")
-	return nil
-}
-
-func VisitRead(r *sam.Record, val string) error {
-	log.Printf("%d - %s", r.Pos, r.Cigar)
 	return nil
 }

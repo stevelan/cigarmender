@@ -16,6 +16,7 @@ type Args struct {
 	DryRun    bool
 	Bases     []string // list of bases to mend, defaults to A,C,G,T,U
 	LogFile   string   // log file to write to
+	Reference string   // genome reference that the alignment was run against
 }
 
 func (a Args) ToString() string {
@@ -27,6 +28,7 @@ func ParseArgs() Args {
 
 	flag.StringVar(&args.Input, "input", "", "required: input BAM file")
 	flag.StringVar(&args.OutputDir, "output", "", "required: output BAM file")
+	flag.StringVar(&args.Reference, "reference", "", "required: reference that the alignment was performed against")
 	flag.IntVar(&args.Threads, "threads", 4, "optional: number of threads")
 	flag.BoolVar(&args.DryRun, "dry-run", false, "optional: print changes without writing output")
 
@@ -44,6 +46,10 @@ func ParseArgs() Args {
 func validate(arg *Args) error {
 	if arg.Input == "" {
 		return fmt.Errorf("Input is required but was blank")
+	}
+
+	if arg.Reference == "" {
+		return fmt.Errorf("Reference is required by but was blank")
 	}
 
 	supportedBases := []string{"A", "C", "G", "T", "U"}
