@@ -31,6 +31,9 @@ clean: ls_bins
 	rm -rvf ${WIN_BINS}
 	@echo
 
+test: fmt imports vet lint
+	gotest -v ./...
+
 win-tools: tools-golint tools-goimports win-tools-golangci-lint
 	
 win-tools-golangci-lint:

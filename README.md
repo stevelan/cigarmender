@@ -10,7 +10,7 @@ Currently:
 
 |Read| Seq            | Cigar   | Mod motif | 
 | ---| ---------------| --------| ----------|
-| R1 | GAAAAa------CT | M6D6M2  | AAaAA     |
+| R1 | `GAAAAa------CT` | M6D6M2  | AAaAA     |
 | R2 | GAAAAAAa----CT | M8D4M2  | AAaAA     |
 | R3 | GAAAAAAAAAa-CT | M11D1M2 | AAaAC     |
 | Ref| GAAAAAAAAAAACT |         |           |
