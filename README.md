@@ -24,8 +24,12 @@ With CIGARMender:
 | R3 | GAAAAA-AAAAaCT | M6D1M7  | AAaCT     |
 | Ref| GAAAAAAAAAAACT |         |           |
 
+![Mended IGV Pileup](./docs/mended_bam.png)
 
 ## Getting started
 Install required tools with \`make wintools`
 Build the project with `make build` will produce a binary in the root of the project directory
 Clean the project with `make clean` 
+
+## Relevant XKCD
+[[XKCD Comic](https://xkcd.com/722/)]
