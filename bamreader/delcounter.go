@@ -7,16 +7,17 @@ import (
 	"github.com/biogo/hts/sam"
 )
 
-func NewDelCounter(index reference.HPIndex) *DelCounter {
-	return &DelCounter{hpIndex: index}
+// NewDelCounter create a DelCounter with an index as a private field.
+func NewDelCounter() *DelCounter {
+	return &DelCounter{}
 }
 
+// DelCounter is a BAM visitor that counts deletions in reads. It's used when doing a dry run.
 type DelCounter struct {
 	ReadWithDel   int
 	InHomopolymer int
 	Count         int
 	Len           int
-	hpIndex       reference.HPIndex
 }
 
 func (d *DelCounter) Summary() string {
@@ -27,7 +28,7 @@ func (d *DelCounter) Summary() string {
 /**
 * Counts the number of reads with deletions
  */
-func (d *DelCounter) Visit(read *sam.Record, s string) error {
+func (d *DelCounter) Visit(read *sam.Record, hpIndex *reference.RefIndex) error {
 
 	hasDel := false
 	rpos := 0
@@ -38,7 +39,7 @@ func (d *DelCounter) Visit(read *sam.Record, s string) error {
 			d.Count++
 			d.Len += cigarop.Len()
 			hasDel = true
-			_, found := d.hpIndex.Search(read.Ref.Name(), reference.NewRange(rpos, rpos+cigarop.Len()))
+			_, found := hpIndex.Search(read.Ref.Name(), reference.NewRange(rpos, rpos+cigarop.Len()))
 			if found {
 				d.InHomopolymer++
 			}

@@ -8,14 +8,14 @@ import (
 	"github.com/biogo/hts/sam"
 )
 
-func NewDeletionCentrer(index reference.HPIndex) DelCenterer {
-	return DelCenterer{hpindex: index}
+// NewDeletionCentrer creates a DelCenterer
+func NewDeletionCentrer() DelCenterer {
+	return DelCenterer{}
 }
 
 type DelCenterer struct {
 	DelCount int
 	HPCount  int
-	hpindex  reference.HPIndex
 }
 
 func (d *DelCenterer) Summary() string {
@@ -25,7 +25,7 @@ func (d *DelCenterer) Summary() string {
 /**
 * Counts the number of reads with deletions
  */
-func (d *DelCenterer) Visit(read *sam.Record, s string) error {
+func (d *DelCenterer) Visit(read *sam.Record, hpIndex *reference.RefIndex) error {
 	qpos := 0
 	rpos := 0
 
@@ -33,9 +33,9 @@ func (d *DelCenterer) Visit(read *sam.Record, s string) error {
 		if cigarop.Type() == sam.CigarDeletion { // deletion doesn't advance query
 			// check if hp
 			query := reference.NewRange(rpos, rpos+cigarop.Len())
-			hp, found := d.hpindex.Search(read.Ref.Name(), query)
+			hp, found := hpIndex.Search(read.Ref.Name(), query)
 			if found {
-				println("Found homopolymer for read : %s", hp.ToString())
+				println("Found homopolymer for read : %s", hp.String())
 			}
 
 		} else {

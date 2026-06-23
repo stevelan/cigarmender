@@ -66,10 +66,10 @@ func TestSearch(t *testing.T) {
 	query := NewRange(149, 152)
 	result, found := index.Search(ID, query)
 	if !found {
-		t.Fatalf("Could not find %s in %v", query.ToString(), index)
+		t.Fatalf("Could not find %s in %v", query.String(), index)
 	}
 	if result.start != 149 {
-		t.Fatalf("Should have found %s at 0 instead got %d - %v", query.ToString(), result.start, index)
+		t.Fatalf("Should have found %s at 0 instead got %d - %v", query.String(), result.start, index)
 	}
 
 }

@@ -3,23 +3,27 @@ package args
 import (
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
+	"os"
 	"slices"
 	"strings"
 )
 
+// Args struct to hold the command line args
 type Args struct {
-	Input     string // input BAM file to mend
-	SampleCSV string // optional two column csv file with SampleName and Sample-BAM-file of the bams to be processed
-	OutputDir string // output directory
-	Threads   int    // number of threads to use
-	DryRun    bool
-	Bases     []string // list of bases to mend, defaults to A,C,G,T,U
-	LogFile   string   // log file to write to
-	Reference string   // genome reference that the alignment was run against
+	Input           string // input BAM file to mend
+	SampleCSV       string // optional two column csv file with SampleName and Sample-BAM-file of the bams to be processed
+	OutputDir       string // output directory
+	Threads         int    // number of threads to use
+	DryRun          bool
+	Bases           []string // list of bases to mend, defaults to A,C,G,T,U
+	LogFile         string   // log file to write to
+	Reference       string   // genome reference that the alignment was run against
+	HomopolymerSize int      // minimum length required to be considered a homopolymer
+	Verbose         bool
 }
 
-func (a Args) ToString() string {
+func (a Args) String() string {
 	return fmt.Sprintf("Args: %#v", a)
 }
 
@@ -31,13 +35,16 @@ func ParseArgs() Args {
 	flag.StringVar(&args.Reference, "reference", "", "required: reference that the alignment was performed against")
 	flag.IntVar(&args.Threads, "threads", 4, "optional: number of threads")
 	flag.BoolVar(&args.DryRun, "dry-run", false, "optional: print changes without writing output")
+	flag.IntVar(&args.HomopolymerSize, "min-hp", 3, "optional: number of repeat bases to be considered a homopolymer")
+	flag.BoolVar(&args.Verbose, "verbose", false, "optional: enables verbose logging")
 
 	bases := flag.String("bases", "A,C,G,T,U", "optional: set of bases to check for homopolymer runs")
 	args.Bases = strings.Split(*bases, ",")
 	flag.Parse()
 	if err := validate(&args); err != nil {
 		flag.Usage()
-		log.Fatal(err)
+		slog.Error("Usage error", "err", err)
+		os.Exit(1)
 	}
 
 	return args
