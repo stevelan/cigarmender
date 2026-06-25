@@ -17,36 +17,40 @@ import (
 	"github.com/biogo/biogo/seq/linear"
 )
 
-// Range - a genomic range with a start and end position
+// Range - a genomic range with a Start and end position
 type Range struct {
-	start int
-	end   int
+	Start int
+	End   int
 }
 
 // NewRange creates a new range with the largest value guaranteed to be after the smallest
 func NewRange(s, e int) Range {
 	if e <= s {
-		return Range{start: e, end: s}
+		return Range{Start: e, End: s}
 	}
-	return Range{start: s, end: e}
+	return Range{Start: s, End: e}
 }
 
 // IsWithin returns true if the target range is within the receiver range
 func (r *Range) IsWithin(target Range) bool {
-	return r.start <= target.start && target.end < r.end
+	return r.Start <= target.Start && target.End < r.End
+}
+
+func (r *Range) Len() int {
+	return r.End - r.Start
 }
 
 // String receiver function for Range
 func (r *Range) String() string {
-	return fmt.Sprintf("Range{%d to %d}", r.start, r.end)
+	return fmt.Sprintf("Range{%d to %d}", r.Start, r.End)
 }
 
 /**
-* Sort ranges by the start position within the range
+* Sort ranges by the Start position within the range
  */
 func sortRanges(ranges []Range) {
 	sort.Slice(ranges, func(i, j int) bool {
-		return ranges[i].start < ranges[j].start
+		return ranges[i].Start < ranges[j].Start
 	})
 }
 
@@ -90,7 +94,7 @@ func (ref *RefIndex) Search(id string, query Range) (Range, bool) {
 		if e.IsWithin(t) {
 			return 0
 		}
-		if e.start < t.start {
+		if e.Start < t.Start {
 			return -1
 		}
 
@@ -148,16 +152,16 @@ func findHomopolymers(sequence *linear.Seq, hpMinSize int, toIndex map[alphabet.
 		base := sequence.At(baseIdx).L
 
 		if base == lastBase {
-			// this base same as last base start a new homopolymer range or continue
+			// this base same as last base Start a new homopolymer range or continue
 			if !inHp {
 				inHp = true
-				newRange.start = baseIdx - 1 // use previous start index as start position
+				newRange.Start = baseIdx - 1 // use previous Start index as Start position
 			}
 			continue
-		} else if inHp && (baseIdx-newRange.start) >= hpMinSize {
+		} else if inHp && (baseIdx-newRange.Start) >= hpMinSize {
 			// this base different to last base and we are in a homopolymer and it is the minimum size or
 			// store range
-			newRange.end = baseIdx
+			newRange.End = baseIdx
 			if toIndex[lastBase] {
 				homopolymers = append(homopolymers, newRange)
 			}
@@ -169,8 +173,8 @@ func findHomopolymers(sequence *linear.Seq, hpMinSize int, toIndex map[alphabet.
 
 	}
 	// grab homopolymer at end of the sequence
-	if inHp && (sequence.Len()-newRange.start) >= hpMinSize {
-		newRange.end = sequence.Len()
+	if inHp && (sequence.Len()-newRange.Start) >= hpMinSize {
+		newRange.End = sequence.Len()
 		if toIndex[lastBase] {
 			homopolymers = append(homopolymers, newRange)
 		}

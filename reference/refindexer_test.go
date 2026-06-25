@@ -68,8 +68,8 @@ func TestSearch(t *testing.T) {
 	if !found {
 		t.Fatalf("Could not find %s in %v", query.String(), index)
 	}
-	if result.start != 149 {
-		t.Fatalf("Should have found %s at 0 instead got %d - %v", query.String(), result.start, index)
+	if result.Start != 149 {
+		t.Fatalf("Should have found %s at 0 instead got %d - %v", query.String(), result.Start, index)
 	}
 
 }

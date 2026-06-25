@@ -5,16 +5,19 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strings"
+
+	"cigarmender/args"
+	"cigarmender/log"
+	"cigarmender/reference"
+	"path/filepath"
 
 	"github.com/biogo/hts/bam"
 	"github.com/biogo/hts/sam"
-
-	"cigarmender/args"
-	"cigarmender/reference"
 )
 
 type ReadVisitor interface {
-	Visit(read *sam.Record, hpIndex *reference.RefIndex) error
+	Visit(read *sam.Record, hpIndex *reference.RefIndex, bamWriter *BamWriter) error
 	Summary() string
 }
 
@@ -36,27 +39,42 @@ func ReadBam(bamfileStr string, visitor ReadVisitor, hpIndex *reference.RefIndex
 	if err != nil {
 		return 0, fmt.Errorf("ReadBam could not create iterator %v", err)
 	}
+	outputFile := getOutputFile(bamfileStr, args)
+
+	bamWriter, err := NewBamWriter(outputFile, bamreader.Header(), args.CompressionLevel)
+	if err != nil {
+		return 0, fmt.Errorf("Creating bam writer %v", err)
+	}
+	defer bamWriter.Close()
 
 	readCount := 0
 
 	for iter.Next() {
 		read := iter.Record()
-		if err = visitor.Visit(read, hpIndex); err != nil {
+		if err = visitor.Visit(read, hpIndex, bamWriter); err != nil {
 			return readCount, fmt.Errorf("Error processing read : %s", read)
 		}
 
 		readCount++
-		if readCount%500000 == 0 {
+		if readCount%200000 == 0 {
 			slog.Info("ReadBam Progress", "readCount", readCount)
 		}
 	}
 
 	if err := iter.Error(); err != nil {
 		if err == io.EOF {
-			fmt.Printf("Successfully processed %s to end of the BAM file.", bamfileStr)
+			log.Verbose("Successfully processed %s to end of the BAM file.", bamfileStr)
 		} else {
-			return readCount, fmt.Errorf("Error occurred reading %s: %v", bamfileStr, err)
+			return readCount, fmt.Errorf("ReadBam - Error occurred reading %s: %v", bamfileStr, err)
 		}
 	}
 	return readCount, nil
+}
+
+func getOutputFile(bamfileStr string, args args.Args) string {
+	baseInputFile := filepath.Base(bamfileStr)
+	extension := filepath.Ext(bamfileStr)
+	baseOutFile := strings.TrimSuffix(baseInputFile, extension) + ".mended" + extension
+	log.Verbose("Writing to output file", "file", baseOutFile, "outputDir", args.OutputDir)
+	return filepath.Join(args.OutputDir, baseOutFile)
 }

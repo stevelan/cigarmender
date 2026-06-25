@@ -20,7 +20,7 @@ type DelCounter struct {
 	Len           int
 }
 
-func (d *DelCounter) Summary() string {
+func (d DelCounter) Summary() string {
 	return fmt.Sprintf("Counted %d unique reads and %d total deletions with average length %.2f\n%d deletions in homopolymers",
 		d.ReadWithDel, d.Count, float64(d.Len)/float64(d.Count), d.InHomopolymer)
 }
@@ -28,7 +28,7 @@ func (d *DelCounter) Summary() string {
 /**
 * Counts the number of reads with deletions
  */
-func (d *DelCounter) Visit(read *sam.Record, hpIndex *reference.RefIndex) error {
+func (d *DelCounter) Visit(read *sam.Record, hpIndex *reference.RefIndex, _ *BamWriter) error {
 
 	hasDel := false
 	rpos := 0
