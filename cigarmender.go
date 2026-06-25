@@ -31,11 +31,7 @@ func main() {
 
 	bamVisitor := getVisitor(args)
 
-	// CPU profiling
-	count, err := captureCPU(func() (int, error) {
-		return bamreader.ReadBam(args.Input, bamVisitor, index, args)
-	})
-	captureAllocs()
+	count, err := bamreader.ReadBam(args.Input, bamVisitor, index, args)
 
 	if err != nil {
 		log.Fatalf("Error reading bam %v", err)
