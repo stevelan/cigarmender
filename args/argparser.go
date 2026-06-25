@@ -37,7 +37,7 @@ func ParseArgs() Args {
 	flag.StringVar(&args.Reference, "reference", "", "required: reference that the alignment was performed against")
 	flag.IntVar(&args.Threads, "threads", defaultThreads(), "optional: number of threads, defaults to num CPUS minus two")
 	flag.BoolVar(&args.DryRun, "dry-run", false, "optional: print changes without writing output")
-	flag.IntVar(&args.HomopolymerSize, "min-hp", 3, "optional: number of repeat bases to be considered a homopolymer")
+	flag.IntVar(&args.HomopolymerSize, "min-hp", 4, "optional: number of repeat bases to be considered a homopolymer")
 	flag.BoolVar(&args.Verbose, "verbose", false, "optional: enables verbose logging")
 	flag.IntVar(&args.CompressionLevel, "compress-level", 3, "optional: Changes the compression level between 1 (best speed) and 9 (best compression)")
 
