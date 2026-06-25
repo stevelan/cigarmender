@@ -1,0 +1,19 @@
+8 compression threads
+----------------------------------------
+Compression	    Size	Execution time
+Default  	    3.7G	189.2 seconds
+Best Speed	    4.6G	43.6 seconds
+Best Speed + 1	4.2G	50.9 seconds
+Best Speed + 2	4.1G	64 seconds
+
+17 compression threads
+----------------------------------------
+Compression     Size    Execution time
+Best Speed + 1  4.2G    47.3 seconds
+Best Speed + 2  4.1G    53.57 seconds
+Default         3.7G    89.2 seconds
+
+16 compression threads
+----------------------------------------
+Compression     Size    Execution time
+Best Speed + 4  

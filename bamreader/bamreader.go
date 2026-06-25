@@ -41,7 +41,7 @@ func ReadBam(bamfileStr string, visitor ReadVisitor, hpIndex *reference.RefIndex
 	}
 	outputFile := getOutputFile(bamfileStr, args)
 
-	bamWriter, err := NewBamWriter(outputFile, bamreader.Header(), args.CompressionLevel)
+	bamWriter, err := NewBamWriter(outputFile, bamreader.Header(), args.CompressionLevel, args.Threads)
 	if err != nil {
 		return 0, fmt.Errorf("Creating bam writer %v", err)
 	}

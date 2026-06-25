@@ -95,4 +95,3 @@ func captureAllocs() error {
 	defer f.Close()
 	return pprof.Lookup("allocs").WriteTo(f, 0)
 }
-

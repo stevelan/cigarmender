@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime"
 	"slices"
 	"strings"
 )
@@ -34,7 +35,7 @@ func ParseArgs() Args {
 	flag.StringVar(&args.Input, "input", "", "required: input BAM file")
 	flag.StringVar(&args.OutputDir, "output", "", "required: output BAM file")
 	flag.StringVar(&args.Reference, "reference", "", "required: reference that the alignment was performed against")
-	flag.IntVar(&args.Threads, "threads", 4, "optional: number of threads")
+	flag.IntVar(&args.Threads, "threads", defaultThreads(), "optional: number of threads, defaults to num CPUS minus two")
 	flag.BoolVar(&args.DryRun, "dry-run", false, "optional: print changes without writing output")
 	flag.IntVar(&args.HomopolymerSize, "min-hp", 3, "optional: number of repeat bases to be considered a homopolymer")
 	flag.BoolVar(&args.Verbose, "verbose", false, "optional: enables verbose logging")
@@ -50,6 +51,10 @@ func ParseArgs() Args {
 	}
 
 	return args
+}
+
+func defaultThreads() int {
+	return max(runtime.NumCPU()-2, 1)
 }
 
 func validate(arg *Args) error {

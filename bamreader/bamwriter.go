@@ -4,7 +4,6 @@ import (
 	"cigarmender/log"
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/biogo/hts/bam"
 	"github.com/biogo/hts/sam"
@@ -12,22 +11,16 @@ import (
 
 // NewBamWriter opens a file for writing with the given bam header.
 // Caller must call Close() on the returned writer
-func NewBamWriter(outputPath string, bamHeader *sam.Header, compression int) (*BamWriter, error) {
+func NewBamWriter(outputPath string, bamHeader *sam.Header, compression int, threads int) (*BamWriter, error) {
 	out, err := os.Create(outputPath)
 	if err != nil {
 		return nil, fmt.Errorf("create output BAM: %w", err)
 	}
-	totalCPUs := runtime.NumCPU()
 
 	var writer *bam.Writer
 
-	// see gzip.BestSpeed
-	wc := totalCPUs - 2
-	if wc < 1 {
-		wc = 1
-	}
-	log.Verbose("Compression settings", "level", compression, "concurrency", wc)
-	writer, err = bam.NewWriterLevel(out, bamHeader, compression, wc)
+	log.Verbose("Compression settings", "level", compression, "concurrency", threads)
+	writer, err = bam.NewWriterLevel(out, bamHeader, compression, threads)
 
 	if err != nil {
 		return nil, fmt.Errorf("create BAM writer: %w", err)
