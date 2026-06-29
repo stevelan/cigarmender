@@ -2,15 +2,25 @@
 
 .PHONY: all clean fmt lint vet build ls_bins ls_srcs imports
 
-SRCS := $(wildcard *.go)
-BASH_BINS := $(SRCS:%.go=%)
-WIN_BINS := $(SRCS:%.go=%.exe)
+BINS := cigarmender
+SRCS := $(wildcard  ./cmd/cigarmender/*.go)
+BIN_DIR := ./bin
+BASH_BINS := $(BIN_DIR)/$(BINS)
+WIN_BINS := $(BIN_DIR)/$(BINS).exe
+GOPATH := $(shell go env GOPATH)
 
-all: fmt imports vet lint build 
+all: fmt imports vet lint test build 
 
 build: vet lint
 	@echo "Go building (${SRCS})"
-	go build ${SRCS}
+	mkdir -p $(BIN_DIR)
+	go build -o $(BASH_BINS) $(SRCS)
+	@echo
+
+win-build: vet lint
+	@echo "Go building (${SRCS})"
+	mkdir -p $(BIN_DIR)
+	go build -o $(WIN_BINS) $(SRCS)
 	@echo
 
 vet: fmt
@@ -20,7 +30,7 @@ fmt:
 	go fmt ./...
 
 lint: fmt
-	golint ./...
+	golangci-lint run ./...
 
 imports:
 	goimports -l -w .
@@ -38,17 +48,17 @@ win-tools: tools-golint tools-goimports win-tools-golangci-lint
 	
 win-tools-golangci-lint:
 	@echo "Installing golangci-lint"
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
+	choco install golangci-lint
 	@echo
 
 tools-golint:
-	@echo "Installing golint"
-	go install golang.org/x/lint/golint
+	@echo "Installing golangci-lint"
+	curl -sSfL https://golangci-lint.run/install.sh | sh -s -- -b $(GOPATH)/bin v2.12.2
 	@echo
 
 tools-goimports:
 	@echo "Installing goimports"
-	go install golang.org/x/tools/cmd/goimports
+	go install golang.org/x/tools/cmd/goimports@latest
 	@echo
 
 ls_bins: 
