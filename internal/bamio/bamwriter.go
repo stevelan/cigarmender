@@ -1,9 +1,13 @@
-package bamreader
+package bamio
 
 import (
-	"cigarmender/log"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/stevelan/cigarmender/internal/cli"
+	"github.com/stevelan/cigarmender/internal/log"
 
 	"github.com/biogo/hts/bam"
 	"github.com/biogo/hts/sam"
@@ -11,8 +15,9 @@ import (
 
 // NewBamWriter opens a file for writing with the given bam header.
 // Caller must call Close() on the returned writer
-func NewBamWriter(outputPath string, bamHeader *sam.Header, compression int, threads int) (*BamWriter, error) {
+func NewBamWriter(inputFile string, bamHeader *sam.Header, args cli.Args) (*BamWriter, error) {
 
+	outputPath := getOutputFile(inputFile, args)
 	out, err := os.Create(outputPath)
 	if err != nil {
 		return nil, fmt.Errorf("create output BAM: %w", err)
@@ -20,8 +25,8 @@ func NewBamWriter(outputPath string, bamHeader *sam.Header, compression int, thr
 
 	var writer *bam.Writer
 
-	log.Verbose("Compression settings", "level", compression, "concurrency", threads)
-	writer, err = bam.NewWriterLevel(out, bamHeader, compression, threads)
+	log.Verbose("Compression settings", "level", args.CompressionLevel, "concurrency", args.Threads)
+	writer, err = bam.NewWriterLevel(out, bamHeader, args.CompressionLevel, args.Threads)
 
 	if err != nil {
 		return nil, fmt.Errorf("create BAM writer: %w", err)
@@ -36,13 +41,23 @@ func NewBamWriter(outputPath string, bamHeader *sam.Header, compression int, thr
 
 }
 
+func getOutputFile(bamfileStr string, args cli.Args) string {
+	baseInputFile := filepath.Base(bamfileStr)
+	extension := filepath.Ext(bamfileStr)
+	baseOutFile := strings.TrimSuffix(baseInputFile, extension) + ".mended" + extension
+
+	log.Verbose("Writing to output file", "file", baseOutFile, "outputDir", args.OutputDir)
+
+	return filepath.Join(args.OutputDir, baseOutFile)
+}
+
 type BamWriter struct {
 	path   string
 	writer *bam.Writer
 }
 
-func (bw *BamWriter) Close() {
-	bw.writer.Close()
+func (bw *BamWriter) Close() error {
+	return bw.writer.Close()
 }
 
 func (bw *BamWriter) String() string {

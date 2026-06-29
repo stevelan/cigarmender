@@ -1,4 +1,4 @@
-module cigarmender
+module github.com/stevelan/cigarmender
 
 go 1.26.1
 

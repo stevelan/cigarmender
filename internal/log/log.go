@@ -36,3 +36,10 @@ func SetupLogger(verbose bool) {
 
 	slog.SetDefault(logger)
 }
+
+func CloseAndLog(msg string, operation func() error) {
+	err := operation()
+	if err != nil {
+		slog.Warn(msg, "error", err)
+	}
+}

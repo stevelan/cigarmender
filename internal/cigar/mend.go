@@ -1,57 +1,31 @@
-package bamreader
+package cigar
 
 import (
-	"cigarmender/reference"
-	"fmt"
 	"log/slog"
 
 	"github.com/biogo/hts/sam"
+	"github.com/stevelan/cigarmender/internal/reference"
 )
 
-// NewDelCentrer creates a DelCenterer
-func NewDelCentrer() *DelCentrer {
-	return &DelCentrer{}
+type Stats struct {
+	Deletions    int
+	Homopolymers int
+	Rewrites     int
+	Modified     bool
 }
 
-type DelCentrer struct {
-	DelCount int
-	HPCount  int
-	Rewrites int
-}
-
-func (d DelCentrer) Summary() string {
-	return fmt.Sprintf("Found %d homopolymers out of %d deletions, with %d rewrites", d.HPCount, d.DelCount, d.Rewrites)
-}
-
-/**
-* Counts the number of reads with deletions
- */
-func (d *DelCentrer) Visit(read *sam.Record, hpIndex *reference.RefIndex, bamWriter *BamWriter) error {
-
-	newCigar, modified := processCigar(read, hpIndex, d)
-
-	if modified {
-		slog.Debug("Writing new CIGAR for read", "read", read.Name, "cigar", newCigar)
-		return bamWriter.WriteToBam(read, newCigar)
-	} else {
-		slog.Debug("Writing existing unmodified read", "read", read.Name, "cigar", newCigar)
-		return bamWriter.WriteToBamExisting(read)
-	}
-}
-
-func processCigar(read *sam.Record, hpIndex *reference.RefIndex, d *DelCentrer) ([]sam.CigarOp, bool) {
+func ProcessCigar(read *sam.Record, hpIndex *reference.RefIndex) ([]sam.CigarOp, Stats) {
 	var (
 		pendingCigarDel sam.CigarOp
 		pendingHpRange  reference.Range
 		hasPending      bool
 		pendingDelRPos  int
 	)
-
+	stats := Stats{}
 	// start at read position
 	rpos := read.Pos
 
 	newCigar := make([]sam.CigarOp, 0, len(read.Cigar))
-	any_modified := false
 
 	for _, cigarop := range read.Cigar {
 		if cigarop.Type() == sam.CigarDeletion && !hasPending {
@@ -59,14 +33,14 @@ func processCigar(read *sam.Record, hpIndex *reference.RefIndex, d *DelCentrer) 
 			// check if hp using reference co-ordinates
 			query := reference.NewRange(rpos, rpos+cigarop.Len())
 			hp, found := hpIndex.Search(read.Ref.Name(), query)
-			d.DelCount++
+			stats.Deletions++
 			if found && len(newCigar) > 0 {
 				slog.Debug("Found homopolymer for read", "read", read.Name, "hp", hp.String())
 				pendingCigarDel = cigarop
 				pendingHpRange = hp
 				hasPending = true
 				pendingDelRPos = rpos
-				d.HPCount++
+				stats.Homopolymers++
 			} else {
 				// not in homopolymer or this is the first cigarop, just append to CIGAR
 				hasPending = false
@@ -84,8 +58,8 @@ func processCigar(read *sam.Record, hpIndex *reference.RefIndex, d *DelCentrer) 
 					// rewrite the cigar
 					cigarFragment, modified := rewriteCigar(lastPushedOp, pendingCigarDel, cigarop, pendingHpRange, pendingDelRPos)
 					newCigar = append(poppedCigar, cigarFragment...)
-					any_modified = any_modified || modified
-					d.Rewrites++
+					stats.Modified = stats.Modified || modified
+					stats.Rewrites++
 				} else {
 					slog.Debug("Last pushed op and current op are not a match", "lastPushedOp", lastPushedOp.Type(), "current", cigarop.Type())
 					// just push the deletion and current op onto the stack
@@ -106,7 +80,7 @@ func processCigar(read *sam.Record, hpIndex *reference.RefIndex, d *DelCentrer) 
 		// push the last pendingDel, no subsequent match to centre within
 		newCigar = append(newCigar, pendingCigarDel)
 	}
-	return newCigar, any_modified
+	return newCigar, stats
 }
 
 func isMatch(cigarop sam.CigarOp) bool {

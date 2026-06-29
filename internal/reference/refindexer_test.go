@@ -49,7 +49,7 @@ func TestChrTwo(t *testing.T) {
 }
 
 func index(size int, bases []string, t *testing.T) map[string][]Range {
-	index, err := IndexHomopolymers("../test/data/ref_test.fasta", size, bases)
+	index, err := IndexHomopolymers("testdata/ref_test.fasta", size, bases)
 	if err != nil {
 		t.Fatalf("Error indexing %v", err)
 	}
@@ -58,7 +58,7 @@ func index(size int, bases []string, t *testing.T) map[string][]Range {
 
 func TestSearch(t *testing.T) {
 
-	index, err := IndexHomopolymers("../test/data/ref_test.fasta", 5, []string{"A"})
+	index, err := IndexHomopolymers("testdata/ref_test.fasta", 5, []string{"A"})
 	if err != nil {
 		t.Fatalf("Error indexing %v", err)
 	}

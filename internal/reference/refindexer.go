@@ -2,7 +2,6 @@ package reference
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"maps"
 	"os"
@@ -10,6 +9,8 @@ import (
 	"sort"
 
 	"strings"
+
+	"github.com/stevelan/cigarmender/internal/log"
 
 	"github.com/biogo/biogo/alphabet"
 	"github.com/biogo/biogo/io/seqio"
@@ -111,9 +112,9 @@ func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (homo
 	slog.Info("Building homopolymer index", "reference", refFastaPath, "min-hp-size", hpMinSize, "bases", bases)
 	reference, err := os.Open(refFastaPath)
 	if err != nil {
-		return nil, fmt.Errorf("Error opening reference file %s - %v", refFastaPath, err)
+		return nil, fmt.Errorf("error opening reference file %s - %v", refFastaPath, err)
 	}
-	defer reference.Close()
+	defer log.CloseAndLog("closing readonly reference file", reference.Close)
 
 	index := make(map[string][]Range)
 
@@ -137,7 +138,7 @@ func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (homo
 	}
 
 	if err = scanner.Error(); err != nil {
-		return nil, fmt.Errorf("Error scanning reference %v", err)
+		return nil, fmt.Errorf("error scanning reference %v", err)
 	}
 	return newRefIndex(index), nil
 }

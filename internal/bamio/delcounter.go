@@ -1,8 +1,9 @@
-package bamreader
+package bamio
 
 import (
-	"cigarmender/reference"
 	"fmt"
+
+	"github.com/stevelan/cigarmender/internal/reference"
 
 	"github.com/biogo/hts/sam"
 )
@@ -28,7 +29,7 @@ func (d DelCounter) Summary() string {
 /**
 * Counts the number of reads with deletions
  */
-func (d *DelCounter) Visit(read *sam.Record, hpIndex *reference.RefIndex, _ *BamWriter) error {
+func (d *DelCounter) Process(read *sam.Record, hpIndex *reference.RefIndex, _ *BamWriter) error {
 
 	hasDel := false
 	rpos := 0

@@ -1,8 +1,9 @@
-package bamreader
+package cigar
 
 import (
-	"cigarmender/reference"
 	"testing"
+
+	"github.com/stevelan/cigarmender/internal/reference"
 
 	"github.com/biogo/hts/sam"
 )

@@ -1,4 +1,4 @@
-package args
+package cli
 
 import (
 	"flag"
@@ -71,25 +71,25 @@ func defaultThreads() int {
 
 func validate(arg *Args) error {
 	if arg.Input == "" {
-		return fmt.Errorf("Input is required but was blank")
+		return fmt.Errorf("input is required but was blank")
 	}
 
 	if arg.OutputDir == "" {
-		return fmt.Errorf("Output directory is required but was blank")
+		return fmt.Errorf("output directory is required but was blank")
 	}
 
 	if arg.Reference == "" {
-		return fmt.Errorf("Reference is required by but was blank")
+		return fmt.Errorf("reference is required by but was blank")
 	}
 
 	if arg.CompressionLevel < 1 || arg.CompressionLevel > 9 {
-		return fmt.Errorf("Compression level invalid, valid values between 1 and 9, but got: %d", arg.CompressionLevel)
+		return fmt.Errorf("compression level invalid, valid values between 1 and 9, but got: %d", arg.CompressionLevel)
 	}
 
 	supportedBases := []string{"A", "C", "G", "T", "U"}
 	for _, base := range arg.Bases {
 		if !slices.Contains(supportedBases, base) {
-			return fmt.Errorf("Unsupported base {%s} in bases {%s}", base, arg.Bases)
+			return fmt.Errorf("unsupported base {%s} in bases {%s}", base, arg.Bases)
 		}
 	}
 	return nil
