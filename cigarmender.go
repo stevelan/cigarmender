@@ -19,13 +19,17 @@ func timeTrack(start time.Time, name string) {
 }
 
 func main() {
+
 	defer timeTrack(time.Now(), "CIGARMender execution")
 
 	log.SetupLogger(false)
 	args := args.ParseArgs()
 	log.SetupLogger(args.Verbose)
+	slog.Info("Started cigarmender")
+	log.Verbose("Running cigarmender", "args", args)
 
-	slog.Info("Running cigarmender", "args", args)
+	createOutputDir(args.OutputDir)
+
 	index := buildIndex(args)
 	slog.Info(index.Summary())
 
@@ -34,7 +38,8 @@ func main() {
 	count, err := bamreader.ReadBam(args.Input, bamVisitor, index, args)
 
 	if err != nil {
-		log.Fatalf("Error reading bam %v", err)
+		slog.Error("Error reading bam", "error", err)
+		os.Exit(1)
 	}
 	slog.Info("Processed reads", "readCount", count)
 
@@ -45,7 +50,7 @@ func buildIndex(args args.Args) *reference.RefIndex {
 	defer timeTrack(time.Now(), "Building index")
 	hpindex, err := reference.IndexHomopolymers(args.Reference, args.HomopolymerSize, args.Bases)
 	if err != nil {
-		log.Fatalf("Could not build index for reference %s - %v", args.Reference, err)
+		slog.Error("Could not build index", "reference", args.Reference, "error", err)
 	}
 	return hpindex
 }
@@ -58,6 +63,16 @@ func getVisitor(args args.Args) bamreader.ReadVisitor {
 		log.Verbose("Not dry run, centring deletions")
 		slog.Info("Rewriting bam file", "input", args.Input, "output", args.OutputDir)
 		return bamreader.NewDelCentrer()
+	}
+}
+
+func createOutputDir(outdir string) {
+
+	log.Verbose("Creating output directory if it does not exist", "output", outdir)
+	err := os.MkdirAll(outdir, os.ModePerm)
+	if err != nil {
+		slog.Error("Could not create output directory", "output", outdir, "error", err)
+		os.Exit(1)
 	}
 }
 

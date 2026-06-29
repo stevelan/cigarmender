@@ -1,4 +1,6 @@
 cigarmender
 output/**
+ash/**
+
 # Added by goreleaser init:
 dist/

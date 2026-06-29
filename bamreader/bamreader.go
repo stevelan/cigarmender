@@ -21,6 +21,9 @@ type ReadVisitor interface {
 	Summary() string
 }
 
+// log progress each N reads
+const progress = 250000
+
 // ReadBam reads in the bam file and applies the visitor function to each read.
 // Returns a count of the number of reads processed
 func ReadBam(bamfileStr string, visitor ReadVisitor, hpIndex *reference.RefIndex, args args.Args) (int, error) {
@@ -43,7 +46,7 @@ func ReadBam(bamfileStr string, visitor ReadVisitor, hpIndex *reference.RefIndex
 
 	bamWriter, err := NewBamWriter(outputFile, bamreader.Header(), args.CompressionLevel, args.Threads)
 	if err != nil {
-		return 0, fmt.Errorf("Creating bam writer %v", err)
+		return 0, fmt.Errorf("Creating bam writer - %v", err)
 	}
 	defer bamWriter.Close()
 
@@ -56,7 +59,7 @@ func ReadBam(bamfileStr string, visitor ReadVisitor, hpIndex *reference.RefIndex
 		}
 
 		readCount++
-		if readCount%200000 == 0 {
+		if readCount%progress == 0 {
 			slog.Info("ReadBam Progress", "readCount", readCount)
 		}
 	}

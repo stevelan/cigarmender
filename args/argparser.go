@@ -30,19 +30,31 @@ func (a Args) String() string {
 }
 
 func ParseArgs() Args {
-	args := Args{}
+	// default args for optional params
+	args := Args{
+		OutputDir:        "ash",
+		Threads:          defaultThreads(),
+		DryRun:           false,
+		HomopolymerSize:  4,
+		Verbose:          false,
+		CompressionLevel: 3,
+	}
 
+	// required args
 	flag.StringVar(&args.Input, "input", "", "required: input BAM file")
-	flag.StringVar(&args.OutputDir, "output", "", "required: output BAM file")
-	flag.StringVar(&args.Reference, "reference", "", "required: reference that the alignment was performed against")
-	flag.IntVar(&args.Threads, "threads", defaultThreads(), "optional: number of threads, defaults to num CPUS minus two")
-	flag.BoolVar(&args.DryRun, "dry-run", false, "optional: print changes without writing output")
-	flag.IntVar(&args.HomopolymerSize, "min-hp", 4, "optional: number of repeat bases to be considered a homopolymer")
-	flag.BoolVar(&args.Verbose, "verbose", false, "optional: enables verbose logging")
-	flag.IntVar(&args.CompressionLevel, "compress-level", 3, "optional: Changes the compression level between 1 (best speed) and 9 (best compression)")
+	flag.StringVar(&args.Reference, "ref", "", "required: reference that the BAMs were aligned against")
+
+	// optional args
+	flag.StringVar(&args.OutputDir, "output", args.OutputDir, "optional: output directory")
+	flag.IntVar(&args.Threads, "threads", args.Threads, "optional: number of threads, defaults to num CPUs minus two")
+	flag.BoolVar(&args.DryRun, "dry-run", args.DryRun, "optional: print changes without writing output")
+	flag.IntVar(&args.HomopolymerSize, "min-hp", args.HomopolymerSize, "optional: number of repeat bases to be considered a homopolymer")
+	flag.BoolVar(&args.Verbose, "verbose", args.Verbose, "optional: enables verbose logging")
+	flag.IntVar(&args.CompressionLevel, "compress-level", args.CompressionLevel, "optional: Changes the compression level between 1 (best speed) and 9 (best compression)")
 
 	bases := flag.String("bases", "A,C,G,T,U", "optional: set of bases to check for homopolymer runs")
 	args.Bases = strings.Split(*bases, ",")
+
 	flag.Parse()
 	if err := validate(&args); err != nil {
 		flag.Usage()

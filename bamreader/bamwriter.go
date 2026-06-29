@@ -12,6 +12,7 @@ import (
 // NewBamWriter opens a file for writing with the given bam header.
 // Caller must call Close() on the returned writer
 func NewBamWriter(outputPath string, bamHeader *sam.Header, compression int, threads int) (*BamWriter, error) {
+
 	out, err := os.Create(outputPath)
 	if err != nil {
 		return nil, fmt.Errorf("create output BAM: %w", err)
@@ -25,6 +26,8 @@ func NewBamWriter(outputPath string, bamHeader *sam.Header, compression int, thr
 	if err != nil {
 		return nil, fmt.Errorf("create BAM writer: %w", err)
 	}
+
+	log.Verbose("BAM Writer created", "path", outputPath)
 
 	return &BamWriter{
 		path:   outputPath,
