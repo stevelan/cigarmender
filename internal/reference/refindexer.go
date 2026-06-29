@@ -107,7 +107,8 @@ func (ref *RefIndex) Search(id string, query Range) (Range, bool) {
 	return Range{}, false
 }
 
-// IndexHomopolymers - Scan through the reference genome and collect homopolymers in an index.
+// IndexHomopolymers - Scan through the reference genome and collect homopolymers in an index. Homopolymers are represented
+// as a range with a start and end position within the sequence
 func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (homopolymerIndex *RefIndex, err error) {
 	slog.Info("Building homopolymer index", "reference", refFastaPath, "min-hp-size", hpMinSize, "bases", bases)
 	reference, err := os.Open(refFastaPath)
@@ -123,17 +124,17 @@ func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (homo
 	scanner := seqio.NewScanner(reader)
 
 	// Create a slice of booleans to quickly check whether a base should be indexed or not
-	toIndex := make(map[alphabet.Letter]bool)
+	basesToIndex := make(map[alphabet.Letter]bool)
 	for _, b := range bases {
 		if len(b) != 1 {
 			return nil, fmt.Errorf("base must be a single character: %q", b)
 		}
-		toIndex[alphabet.Letter(strings.ToUpper(b)[0])] = true
+		basesToIndex[alphabet.Letter(strings.ToUpper(b)[0])] = true
 	}
 
 	for scanner.Next() {
 		sequence := scanner.Seq().(*linear.Seq)
-		index[sequence.ID] = findHomopolymers(sequence, hpMinSize, toIndex)
+		index[sequence.ID] = findHomopolymersInSeq(sequence, hpMinSize, basesToIndex)
 		slog.Debug("Indexed reference sequence", "name", sequence.Name(), "hpCount", len(index[sequence.ID]))
 	}
 
@@ -143,11 +144,11 @@ func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (homo
 	return newRefIndex(index), nil
 }
 
-func findHomopolymers(sequence *linear.Seq, hpMinSize int, toIndex map[alphabet.Letter]bool) []Range {
-	homopolymers := make([]Range, 0)
+func findHomopolymersInSeq(sequence *linear.Seq, hpMinSize int, shouldIndex map[alphabet.Letter]bool) []Range {
+	foundHps := make([]Range, 0)
 	var lastBase alphabet.Letter = 0
 	inHp := false
-	newRange := Range{}
+	newHpRange := Range{}
 
 	for baseIdx := 0; baseIdx < sequence.Len(); baseIdx++ {
 		base := sequence.At(baseIdx).L
@@ -156,30 +157,30 @@ func findHomopolymers(sequence *linear.Seq, hpMinSize int, toIndex map[alphabet.
 			// this base same as last base Start a new homopolymer range or continue
 			if !inHp {
 				inHp = true
-				newRange.Start = baseIdx - 1 // use previous Start index as Start position
+				newHpRange.Start = baseIdx - 1 // use previous Start index as Start position
 			}
 			continue
-		} else if inHp && (baseIdx-newRange.Start) >= hpMinSize {
-			// this base different to last base and we are in a homopolymer and it is the minimum size or
+		} else if inHp && (baseIdx-newHpRange.Start) >= hpMinSize {
+			// this base different to last base and we are in a homopolymer and it is the minimum size
 			// store range
-			newRange.End = baseIdx
-			if toIndex[lastBase] {
-				homopolymers = append(homopolymers, newRange)
+			newHpRange.End = baseIdx
+			if shouldIndex[lastBase] {
+				foundHps = append(foundHps, newHpRange)
 			}
 		}
 		// reset variables
 		lastBase = base
 		inHp = false
-		newRange = Range{}
+		newHpRange = Range{}
 
 	}
 	// grab homopolymer at end of the sequence
-	if inHp && (sequence.Len()-newRange.Start) >= hpMinSize {
-		newRange.End = sequence.Len()
-		if toIndex[lastBase] {
-			homopolymers = append(homopolymers, newRange)
+	if inHp && (sequence.Len()-newHpRange.Start) >= hpMinSize {
+		newHpRange.End = sequence.Len()
+		if shouldIndex[lastBase] {
+			foundHps = append(foundHps, newHpRange)
 		}
 	}
 
-	return homopolymers
+	return foundHps
 }
