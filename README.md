@@ -60,12 +60,12 @@ To run all tests:
 
 ```
 /cmd
-    |- /cigarmender/main.go     # binary entry point for cigarmender
+    /cigarmender/main.go     # binary entry point for cigarmender
 /internal
-    | - /bamio      # bam reader and writers
-    | - /cigar      # mend.go has cigar string manipulation algorithm
-    | - /cli        # command line argument parsing and configuration
-    | - /reference  # reference genome index for detecting homopolymers
+    /bamio      # bam reader and writers
+    /cigar      # mend.go has cigar string manipulation algorithm
+    /cli        # command line argument parsing and configuration
+    /reference  # reference genome index for detecting homopolymers
 ```
 
 ## Relevant XKCD
