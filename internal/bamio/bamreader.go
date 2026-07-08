@@ -3,7 +3,6 @@ package bamio
 import (
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 
 	"github.com/stevelan/cigarmender/internal/cli"
@@ -59,7 +58,7 @@ func ReadBam(bamfileStr string, rp ReadProcessor, args cli.Args) (readCount int,
 
 		readCount++
 		if readCount%progress == 0 {
-			slog.Info("ReadBam Progress", "readCount", readCount)
+			log.Info("ReadBam Progress", "readCount", readCount)
 		}
 	}
 

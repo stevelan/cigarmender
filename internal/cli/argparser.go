@@ -3,11 +3,12 @@ package cli
 import (
 	"flag"
 	"fmt"
-	"log/slog"
 	"os"
 	"runtime"
 	"slices"
 	"strings"
+
+	"github.com/stevelan/cigarmender/internal/log"
 )
 
 // Args struct to hold the command line args
@@ -61,7 +62,7 @@ func ParseArgs() Args {
 	flag.Parse()
 	if err := validate(&args); err != nil {
 		flag.Usage()
-		slog.Error("Usage error", "err", err)
+		log.Error("Usage error", "err", err)
 		os.Exit(1)
 	}
 

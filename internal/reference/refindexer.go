@@ -2,7 +2,7 @@ package reference
 
 import (
 	"fmt"
-	"log/slog"
+
 	"maps"
 	"os"
 	"slices"
@@ -110,7 +110,7 @@ func (ref *RefIndex) Search(id string, query Range) (Range, bool) {
 // IndexHomopolymers - Scan through the reference genome and collect homopolymers in an index. Homopolymers are represented
 // as a range with a start and end position within the sequence
 func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (homopolymerIndex *RefIndex, err error) {
-	slog.Info("Building homopolymer index", "reference", refFastaPath, "min-hp-size", hpMinSize, "bases", bases)
+	log.Info("Building homopolymer index", "reference", refFastaPath, "min-hp-size", hpMinSize, "bases", bases)
 	reference, err := os.Open(refFastaPath)
 	if err != nil {
 		return nil, fmt.Errorf("error opening reference file %s - %v", refFastaPath, err)
@@ -135,7 +135,7 @@ func IndexHomopolymers(refFastaPath string, hpMinSize int, bases []string) (homo
 	for scanner.Next() {
 		sequence := scanner.Seq().(*linear.Seq)
 		index[sequence.ID] = findHomopolymersInSeq(sequence, hpMinSize, basesToIndex)
-		slog.Debug("Indexed reference sequence", "name", sequence.Name(), "hpCount", len(index[sequence.ID]))
+		log.Debug("Indexed reference sequence", "name", sequence.Name(), "hpCount", len(index[sequence.ID]))
 	}
 
 	if err = scanner.Error(); err != nil {

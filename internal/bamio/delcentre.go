@@ -2,9 +2,9 @@ package bamio
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/stevelan/cigarmender/internal/cigar"
+	"github.com/stevelan/cigarmender/internal/log"
 	"github.com/stevelan/cigarmender/internal/reference"
 
 	"github.com/biogo/hts/sam"
@@ -38,10 +38,10 @@ func (d *DelCentrer) Process(read *sam.Record, bamWriter *BamWriter) error {
 	d.Rewrites += stats.Rewrites
 
 	if stats.Modified {
-		slog.Debug("Writing new CIGAR for read", "read", read.Name, "cigar", newCigar)
+		log.Debug("Writing new CIGAR for read", "read", read.Name, "cigar", newCigar)
 		return bamWriter.WriteToBam(read, newCigar)
 	} else {
-		slog.Debug("Writing existing unmodified read", "read", read.Name, "cigar", newCigar)
+		log.Debug("Writing existing unmodified read", "read", read.Name, "cigar", newCigar)
 		return bamWriter.WriteToBamExisting(read)
 	}
 }

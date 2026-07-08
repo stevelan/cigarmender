@@ -1,7 +1,7 @@
 package cigar
 
 import (
-	"log/slog"
+	"github.com/stevelan/cigarmender/internal/log"
 
 	"github.com/biogo/hts/sam"
 	"github.com/stevelan/cigarmender/internal/reference"
@@ -35,7 +35,7 @@ func ProcessCigar(read *sam.Record, hpIndex *reference.RefIndex) ([]sam.CigarOp,
 			hp, found := hpIndex.Search(read.Ref.Name(), query)
 			stats.Deletions++
 			if found && len(newCigar) > 0 {
-				slog.Debug("Found homopolymer for read", "read", read.Name, "hp", hp.String())
+				log.Debug("Found homopolymer for read", "read", read.Name, "hp", hp.String())
 				pendingCigarDel = cigarop
 				pendingHpRange = hp
 				hasPending = true
@@ -49,11 +49,11 @@ func ProcessCigar(read *sam.Record, hpIndex *reference.RefIndex) ([]sam.CigarOp,
 		} else {
 			// if the op prior to the deletion was a match and this op is a match, we can recentre the deletion
 			if hasPending {
-				slog.Debug("Has pending deletion", "delStart", pendingDelRPos, "range", pendingHpRange)
+				log.Debug("Has pending deletion", "delStart", pendingDelRPos, "range", pendingHpRange)
 				lastPushedOp := newCigar[len(newCigar)-1]
 				// need the last pushed op and the current op to be a match to rewrite the deletion
 				if isMatch(lastPushedOp) && isMatch(cigarop) {
-					slog.Debug("Last pushed op and current op are match", "lastPushedOp", lastPushedOp.Type(), "current", cigarop.Type())
+					log.Debug("Last pushed op and current op are match", "lastPushedOp", lastPushedOp.Type(), "current", cigarop.Type())
 					poppedCigar := newCigar[:len(newCigar)-1]
 					// rewrite the cigar
 					cigarFragment, modified := rewriteCigar(lastPushedOp, pendingCigarDel, cigarop, pendingHpRange, pendingDelRPos)
@@ -61,7 +61,7 @@ func ProcessCigar(read *sam.Record, hpIndex *reference.RefIndex) ([]sam.CigarOp,
 					stats.Modified = stats.Modified || modified
 					stats.Rewrites++
 				} else {
-					slog.Debug("Last pushed op and current op are not a match", "lastPushedOp", lastPushedOp.Type(), "current", cigarop.Type())
+					log.Debug("Last pushed op and current op are not a match", "lastPushedOp", lastPushedOp.Type(), "current", cigarop.Type())
 					// just push the deletion and current op onto the stack
 					newCigar = append(newCigar, pendingCigarDel, cigarop)
 				}
@@ -100,7 +100,7 @@ func rewriteCigar(
 	hpLen := homopolymer.Len()
 
 	if delLen >= hpLen {
-		slog.Debug("Deletion len is greater than hp length", "delLen", delLen, "hpLen", hpLen)
+		log.Debug("Deletion len is greater than hp length", "delLen", delLen, "hpLen", hpLen)
 		return []sam.CigarOp{priorMatch, deletion, nextMatch}, false
 	}
 
@@ -111,7 +111,7 @@ func rewriteCigar(
 	shift := targetDelStart - delRpos
 
 	if shift == 0 {
-		slog.Debug("Shift is zero", "prior", priorMatch, "deletion", deletion, "next", nextMatch, "hpStart", homopolymer.Start, "hpLen", hpLen, "delLen", delLen)
+		log.Debug("Shift is zero", "prior", priorMatch, "deletion", deletion, "next", nextMatch, "hpStart", homopolymer.Start, "hpLen", hpLen, "delLen", delLen)
 		return []sam.CigarOp{priorMatch, deletion, nextMatch}, false
 	}
 
@@ -133,7 +133,7 @@ func rewriteCigar(
 
 	if newPriorLen < 0 || newNextLen < 0 {
 		// Cannot realise this rewrite with only the immediate flanking ops.
-		slog.Warn("Prior or next are less than zero", "prior", newPriorLen, "next", newNextLen)
+		log.Warn("Prior or next are less than zero", "prior", newPriorLen, "next", newNextLen)
 		return []sam.CigarOp{priorMatch, deletion, nextMatch}, false
 	}
 
@@ -142,7 +142,7 @@ func rewriteCigar(
 		deletion,
 		sam.NewCigarOp(nextMatch.Type(), newNextLen),
 	})
-	slog.Debug("Rewriting cigar successfully", "prior", priorMatch, "deletion", deletion, "next", nextMatch, "new", cleanedCigar)
+	log.Debug("Rewriting cigar successfully", "prior", priorMatch, "deletion", deletion, "next", nextMatch, "new", cleanedCigar)
 	return cleanedCigar, true
 }
 
