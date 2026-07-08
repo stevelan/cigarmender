@@ -53,7 +53,8 @@ release: gh_token ## Release the latest tagged version with goreleaser
 	goreleaser release --clean
 	@echo
 
-win-tools: tools-golint tools-goimports win-tools-golangci-lint
+tools: tools-golint tools-goimports
+	@echo "Installed tools"
 	
 win-tools-golangci-lint:
 	@echo "Installing golangci-lint"
