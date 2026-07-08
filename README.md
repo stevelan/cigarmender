@@ -36,15 +36,37 @@ Below are two screenshots taken from within IGV that highlight the problem CIGAR
 
 Download the latest pre-built binary from [releases](https://github.com/stevelan/cigarmender/releases)
 
+### Running cigarmender 
+
 Eg: 
 
 ```./bin/cigarmender --input ../data/MODBAMS/28C1.sorted.bam --ref ../data/Reference_Genome.fasta```
 
+This will produce output in /ash by default
+
 ### Build from source:
 
-Build the project with `make build` will produce a binary in the root of the project directory
+Build the project with `make build` will produce a binary in the /bin directory
 
-Clean the project with `make clean` 
+Clean the project with `make clean` to remove the produced binary file
+
+## Developing
+
+To get the development help messages: 
+```make help```
+
+To run all tests: 
+```make test```
+
+```
+/cmd
+    |- /cigarmender/main.go     # binary entry point for cigarmender
+/internal
+    | - /bamio      # bam reader and writers
+    | - /cigar      # mend.go has cigar string manipulation algorithm
+    | - /cli        # command line argument parsing and configuration
+    | - /reference  # reference genome index for detecting homopolymers
+```
 
 ## Relevant XKCD
 [XKCD Comic](https://xkcd.com/722/)
