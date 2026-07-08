@@ -44,6 +44,15 @@ clean: ls_bins
 test: fmt imports vet lint
 	gotest -v ./...
 
+gh_token:
+	@echo "Exporting github token"
+	export GITHUB_TOKEN="$(< ~/.secrets/goreleaser.ghtoken)"
+
+release: gh_token
+	@echo "Releasing..."
+	goreleaser release --clean
+	@echo
+
 win-tools: tools-golint tools-goimports win-tools-golangci-lint
 	
 win-tools-golangci-lint:
