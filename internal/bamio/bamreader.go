@@ -8,14 +8,13 @@ import (
 
 	"github.com/stevelan/cigarmender/internal/cli"
 	"github.com/stevelan/cigarmender/internal/log"
-	"github.com/stevelan/cigarmender/internal/reference"
 
 	"github.com/biogo/hts/bam"
 	"github.com/biogo/hts/sam"
 )
 
 type ReadProcessor interface {
-	Process(read *sam.Record, hpIndex *reference.RefIndex, bamWriter *BamWriter) error
+	Process(read *sam.Record, bamWriter *BamWriter) error
 	Summary() string
 }
 
@@ -24,7 +23,7 @@ const progress = 250000
 
 // ReadBam reads in the bam file and applies the ReadProcessor function to each read.
 // Returns a count of the number of reads processed
-func ReadBam(bamfileStr string, rp ReadProcessor, hpIndex *reference.RefIndex, args cli.Args) (readCount int, retErr error) {
+func ReadBam(bamfileStr string, rp ReadProcessor, args cli.Args) (readCount int, retErr error) {
 	bamf, err := os.Open(bamfileStr)
 	if err != nil {
 		return 0, fmt.Errorf("ReadBam could not open file : %s - %v", bamfileStr, err)
@@ -54,7 +53,7 @@ func ReadBam(bamfileStr string, rp ReadProcessor, hpIndex *reference.RefIndex, a
 
 	for iter.Next() {
 		read := iter.Record()
-		if err = rp.Process(read, hpIndex, bamWriter); err != nil {
+		if err = rp.Process(read, bamWriter); err != nil {
 			return readCount, fmt.Errorf("error processing read : %s", read)
 		}
 

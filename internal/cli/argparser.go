@@ -23,6 +23,7 @@ type Args struct {
 	HomopolymerSize  int    // minimum length required to be considered a homopolymer
 	Verbose          bool
 	CompressionLevel int
+	Command          string
 }
 
 func (a Args) String() string {
@@ -52,6 +53,8 @@ func ParseArgs() Args {
 	flag.BoolVar(&args.Verbose, "verbose", args.Verbose, "optional: enables verbose logging")
 	flag.IntVar(&args.CompressionLevel, "compress-level", args.CompressionLevel, "optional: Changes the compression level between 1 (best speed) and 9 (best compression)")
 
+	flag.StringVar(&args.Command, "command", "cigarmender", "optional: Alternate commands for this cli. This field is mostly used for debugging")
+
 	bases := flag.String("bases", "A,C,G,T,U", "optional: set of bases to check for homopolymer runs")
 	args.Bases = strings.Split(*bases, ",")
 
@@ -80,6 +83,14 @@ func validate(arg *Args) error {
 
 	if arg.Reference == "" {
 		return fmt.Errorf("reference is required by but was blank")
+	}
+
+	validCommands := map[string]bool{
+		"cigarmender": true,
+		"readfilter":  true,
+	}
+	if !validCommands[arg.Command] {
+		return fmt.Errorf("command was not valid, got %s", arg.Command)
 	}
 
 	if arg.CompressionLevel < 1 || arg.CompressionLevel > 9 {

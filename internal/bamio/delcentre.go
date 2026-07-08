@@ -11,14 +11,15 @@ import (
 )
 
 // NewDelCentrer creates a DelCenterer
-func NewDelCentrer() *DelCentrer {
-	return &DelCentrer{}
+func NewDelCentrer(index *reference.RefIndex) *DelCentrer {
+	return &DelCentrer{hpIndex: index}
 }
 
 type DelCentrer struct {
 	Deletions    int
 	Homopolymers int
 	Rewrites     int
+	hpIndex      *reference.RefIndex
 }
 
 func (d DelCentrer) Summary() string {
@@ -28,9 +29,9 @@ func (d DelCentrer) Summary() string {
 /**
 * Counts the number of reads with deletions
  */
-func (d *DelCentrer) Process(read *sam.Record, hpIndex *reference.RefIndex, bamWriter *BamWriter) error {
+func (d *DelCentrer) Process(read *sam.Record, bamWriter *BamWriter) error {
 
-	newCigar, stats := cigar.ProcessCigar(read, hpIndex)
+	newCigar, stats := cigar.ProcessCigar(read, d.hpIndex)
 
 	d.Deletions += stats.Deletions
 	d.Homopolymers += stats.Homopolymers

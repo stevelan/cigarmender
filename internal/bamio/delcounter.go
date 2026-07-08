@@ -19,6 +19,7 @@ type DelCounter struct {
 	InHomopolymer int
 	Count         int
 	Len           int
+	hpIndex       *reference.RefIndex
 }
 
 func (d DelCounter) Summary() string {
@@ -29,7 +30,7 @@ func (d DelCounter) Summary() string {
 /**
 * Counts the number of reads with deletions
  */
-func (d *DelCounter) Process(read *sam.Record, hpIndex *reference.RefIndex, _ *BamWriter) error {
+func (d *DelCounter) Process(read *sam.Record, _ *BamWriter) error {
 
 	hasDel := false
 	rpos := 0
@@ -40,7 +41,7 @@ func (d *DelCounter) Process(read *sam.Record, hpIndex *reference.RefIndex, _ *B
 			d.Count++
 			d.Len += cigarop.Len()
 			hasDel = true
-			_, found := hpIndex.Search(read.Ref.Name(), reference.NewRange(rpos, rpos+cigarop.Len()))
+			_, found := d.hpIndex.Search(read.Ref.Name(), reference.NewRange(rpos, rpos+cigarop.Len()))
 			if found {
 				d.InHomopolymer++
 			}
