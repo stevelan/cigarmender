@@ -36,11 +36,17 @@ Below are two screenshots taken from within IGV that highlight the problem CIGAR
 
 Download the latest pre-built binary from [releases](https://github.com/stevelan/cigarmender/releases)
 
+Eg: 
+
+```./bin/cigarmender --input ../data/MODBAMS/28C1.sorted.bam --ref ../data/Reference_Genome.fasta```
+
 ### Build from source:
 
 Build the project with `make build` will produce a binary in the root of the project directory
 
 Clean the project with `make clean` 
+
+
 
 ## Relevant XKCD
 [XKCD Comic](https://xkcd.com/722/)
