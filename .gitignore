@@ -1,6 +1,6 @@
-cigarmender
 output/**
 ash/**
+bin/**
 
 # Added by goreleaser init:
 dist/

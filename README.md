@@ -46,7 +46,5 @@ Build the project with `make build` will produce a binary in the root of the pro
 
 Clean the project with `make clean` 
 
-
-
 ## Relevant XKCD
 [XKCD Comic](https://xkcd.com/722/)
