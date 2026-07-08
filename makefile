@@ -1,4 +1,4 @@
-.DEFAULT_GOAL=build
+.DEFAULT_GOAL=help
 
 .PHONY: all clean fmt lint vet build ls_bins ls_srcs imports
 
@@ -9,9 +9,9 @@ BASH_BINS := $(BIN_DIR)/$(BINS)
 WIN_BINS := $(BIN_DIR)/$(BINS).exe
 GOPATH := $(shell go env GOPATH)
 
-all: fmt imports vet lint test build 
+all: fmt imports vet lint test build ## Lint, test and build binaries
 
-build: vet lint
+build: vet lint ## Build binaries with go build
 	@echo "Go building (${SRCS})"
 	mkdir -p $(BIN_DIR)
 	go build -o $(BASH_BINS) $(SRCS)
@@ -29,26 +29,26 @@ vet: fmt
 fmt:
 	go fmt ./...
 
-lint: fmt
+lint: fmt ## Static analysis with golangci-lint
 	golangci-lint run ./...
 
-imports:
+imports: ## Organise imports with goimports
 	goimports -l -w .
 
-clean: ls_bins
+clean: ls_bins ## Remove binaries
 	@echo "Cleaning..."
 	rm -rvf ${BASH_BINS}
 	rm -rvf ${WIN_BINS}
 	@echo
 
-test: fmt imports vet lint
+test: fmt imports vet lint ## Run all tests
 	gotest -v ./...
 
 gh_token:
 	@echo "Exporting github token"
 	export GITHUB_TOKEN="$(< ~/.secrets/goreleaser.ghtoken)"
 
-release: gh_token
+release: gh_token ## Release the latest tagged version with goreleaser
 	@echo "Releasing..."
 	goreleaser release --clean
 	@echo
@@ -76,3 +76,7 @@ ls_bins:
 
 ls_srcs: 
 	@echo "${SRCS}"
+
+help: ## Display this help message
+	@echo "CIGARMender - homopolymer-aware deletion centering of aligned reads"
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
